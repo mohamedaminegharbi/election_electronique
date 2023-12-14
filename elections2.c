@@ -1,23 +1,21 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
-// Define the 'fonction' enumeration
 typedef enum {
     administrateur,
     electeur,
     candidat 
 } fonction;
 
-// Define the 'personne' structure
 typedef struct {
     fonction role;
     char nom[50];
     char prenom[50];
-    long numero_de_carte;  // Changed to long
+    long numero_de_carte;  
     int deja_voter;
 } personne;
 
-// Define the 'candidat' structure
 typedef struct {
     char nom[50];
     char prenom[50];
@@ -28,59 +26,54 @@ typedef struct {
 int num_exist(personne* array, int taille, long numero_de_carte) {
     for (int i = 0; i < taille; i++) {
         if (array[i].numero_de_carte == numero_de_carte) {
-            return i;  // Card number found, return the index
+            return i;  
         }
     }
-    return -1;  // Card number not found
+    return -1;  
 }
 
 int main() {
-    // Variables to hold the number of each role
+
     int num_administrateurs, num_electeurs;
 
-    // Prompt the user to enter the number of each role
-    printf("Enter the number of administrateurs: ");
+    printf("Entrer le nombre des administrateurs: ");
     scanf("%d", &num_administrateurs);
-    printf("Enter the number of electeurs: ");
+    printf("Entrez le nombre des electeurs: ");
     scanf("%d", &num_electeurs);
 
-    // Create arrays of 'personne' and 'candidat'
     personne personnes[num_administrateurs + num_electeurs];
-    personne administrateurs[num_administrateurs];  // Separate array for administrators
-    personne etudiants[num_electeurs];  // Separate array for students
-    candidature candidats[num_electeurs];  // Maximum possible number of candidates is the number of students
+    candidature candidats[num_electeurs];  
 
-    // Variables to hold user input
     int input_role;
     char input_nom[50];
     char input_prenom[50];
-    long input_numero_de_carte;  // Changed to long
+    long input_numero_de_carte;  
     int input_vote;
-    int num_candidats = 0;  // Initialize the number of candidates to 0
+    int num_candidats = 0;  
 
-    // Fill the 'administrateurs' array with actual data
+    printf("On va saisir les informations des administrateurs.\n");
     for (int i=0; i<num_administrateurs; i++) {
+
         do {
-            printf("Enter numero_de_carte: ");
-            scanf("%ld", &input_numero_de_carte);  // Use %ld for long
+            
+            printf("Entrez le numero de carte: ");
+            scanf("%ld", &input_numero_de_carte);  
             while ((getchar()) != '\n');
             
-            if (num_exist(personnes, num_administrateurs + num_electeurs, input_numero_de_carte) != -1) {
-                printf("This identity number already exists. Please verify and enter a unique number.\n");
+            int index = num_exist(personnes, num_administrateurs + num_electeurs, input_numero_de_carte);
+            if (index != -1) {
+                printf("Ce num d identite existe deja. Veuillez verifier et entrer un num unique.\n");
             }
+            
         } while (num_exist(personnes, num_administrateurs + num_electeurs, input_numero_de_carte) != -1);
 
-        printf("Enter nom: ");
+        
+        printf("Entrez nom: ");
         scanf("%s", input_nom);
         while ((getchar()) != '\n');
-
-        printf("Enter prenom: ");
+        
+        printf("Entrez prenom: ");
         fgets(input_prenom, sizeof(input_prenom), stdin);
-
-        administrateurs[i].role = administrateur;
-        strcpy(administrateurs[i].nom, input_nom);
-        strcpy(administrateurs[i].prenom, input_prenom);
-        administrateurs[i].numero_de_carte = input_numero_de_carte;
         
         personnes[i].role = administrateur;
         strcpy(personnes[i].nom, input_nom);
@@ -88,98 +81,128 @@ int main() {
         personnes[i].numero_de_carte = input_numero_de_carte;
     }
 
-    //fill candidats and etudiants
+    printf("On va saisir les informations des etudiants.\n");
     for (int i=0; i<num_electeurs; i++) {
+
         do {
-            printf("saisissez votre numero de carte d'identite : ");
-            scanf("%ld", &input_numero_de_carte);  // Use %ld for long
+            printf("Entrez le numero de carte: ");
+            scanf("%ld", &input_numero_de_carte);  
             while ((getchar()) != '\n');
-            if (num_exist(personnes, num_administrateurs + num_electeurs, input_numero_de_carte) != -1) {
-                printf("Ce numero d identite existe deja. Veuillez verifier et entrer un numero unique..\n");
+            
+            int index = num_exist(personnes, num_administrateurs + num_electeurs, input_numero_de_carte);
+            if (index != -1) {
+                if (personnes[index].role == administrateur) {
+                    printf("Ce num d identite appartient deja a un administrateur. Nous saisissons actuellement uniquement les informations des étudiants. Veuillez entrer un nouveau numéro.\n");
+                } else {
+                    printf("Ce numero d identite appartient deja a un etudiant. Veuillez verifier et entrer un num unique.\n");
+                }
             }
         } while (num_exist(personnes, num_administrateurs + num_electeurs, input_numero_de_carte) != -1);
-
-        printf("saisissez votre nom: ");
+        
+        printf("Veuillez saisir votre nom : ");
         scanf("%s", input_nom);
         while ((getchar()) != '\n');
-
-        printf("saisissez votre prenom: ");
+        
+        printf("Veuillez saisir votre prenom : ");
         fgets(input_prenom, sizeof(input_prenom), stdin);
-
-        printf("voulez-vous postuler votre candidature ? (0 pour non, 1 pour oui): ");
+        
+        printf("Voulez-vous postuler votre candidature ? (0 pour non, 1 pour oui) : ");
         scanf("%d", &input_role);
-
+        
         if (input_role == 1) {
-            // If the student is a candidate, add them to the 'candidats' array
+            // Si l'étudiant est un candidat, ajoutez-le au tableau 'candidats'
             candidats[num_candidats].num = num_candidats;
             strcpy(candidats[num_candidats].nom, input_nom);
             strcpy(candidats[num_candidats].prenom, input_prenom);
-            candidats[num_candidats].votes = 0;  // Initialize votes to 0
-            num_candidats++;  // Increase the number of candidates
+            candidats[num_candidats].votes = 0;  // Initialisez les votes à 0
+            num_candidats++;  // Augmentez le nombre de candidats
         }
-
-        etudiants[i].role = input_role == 1 ? candidat : electeur;
-        strcpy(etudiants[i].nom, input_nom);
-        strcpy(etudiants[i].prenom, input_prenom);
-        etudiants[i].numero_de_carte = input_numero_de_carte;
-        etudiants[i].deja_voter=0;
-
+        
         personnes[num_administrateurs + i].role = input_role == 1 ? candidat : electeur;
         strcpy(personnes[num_administrateurs + i].nom, input_nom);
         strcpy(personnes[num_administrateurs + i].prenom, input_prenom);
         personnes[num_administrateurs + i].numero_de_carte = input_numero_de_carte;
+        personnes[num_administrateurs + i].deja_voter=0;
     }
 
 
-    // Implement the voting process
+
+    // Implementer le processus du vote 
     int i = 0;
     while (i < num_electeurs) {
-        printf("saisissez votre numero de carte d'identite : ");
+        printf("Entrez le num de carte: ");
         scanf("%ld", &input_numero_de_carte);
         while ((getchar()) != '\n');
         
-        int index = num_exist(etudiants, num_electeurs, input_numero_de_carte);
-        if (index != -1 && !etudiants[index].deja_voter) {
+        int index = num_exist(personnes, num_administrateurs + num_electeurs, input_numero_de_carte);
+        if (index != -1 && !personnes[index].deja_voter && personnes[index].role != administrateur) {
             for (int j = 0; j < num_candidats; j++) {
                 printf("%d. %s\n", j, candidats[j].nom);
             }
             
             do {
-                printf("Entrez le numéro du candidat pour lequel vous voulez voter: ");
+                printf("Entrez le num du candidat pour lequel vous voulez voter: ");
                 scanf("%d", &input_vote);
-                
                 if (input_vote < 0 || input_vote >= num_candidats) {
-                    printf("Ce numéro n'est pas disponible. Veuillez choisir un numéro valide.\n");
+                    printf("Ce num n'est pas disponible. Veuillez choisir un num valide.\n");
                 }
             } while (input_vote < 0 || input_vote >= num_candidats);
-
+            
             // Mettre à jour les votes du candidat choisi
             candidats[input_vote].votes++;
-
-            etudiants[index].deja_voter = 1;  // Marquer l'étudiant comme ayant voté
-            i++;  // Incrémenter i seulement si num_existe ne renvoie pas -1 et que l'étudiant n'a pas déjà voté
+            
+            personnes[index].deja_voter = 1;  // Marquer la personne comme ayant voté
+            i++;  // Incrémenter i seulement si num_existe ne renvoie pas -1 et que la personne n'a pas déjà voté
         } else {
+
             if (index != -1) {
-                printf("Vous avez deja vote. Chaque etudiant ne peut voter qu'une seule fois.\n");
+                if (personnes[index].role == administrateur) {
+                    printf("Vous etes un administrateur. Entrez 0 pour arreter les elections: ");
+                    scanf("%d", &input_vote);
+                    if (input_vote == 0) {
+                        printf("Les elections ont ete arretees par un administrateur.\n");
+                        exit(0);
+                    } else {
+                        printf("Le code n est pas valide. Les elections continuent.\n");
+                    }
+                } else {
+                    printf("Vous avez deja vote. Chaque etudiant ne peut voter qu une seule fois.\n");
+                }
             } else {
-                printf("Votre carte d'identite n'est pas enregistree, veuillez verifier vos informations.\n");
+                printf("Votre carte d identite n est pas enregistree, veuillez verifier vos informations.\n");
             }
+            
         }
     }
 
 
-    // Find the candidate with the most votes
+    for (int i = 0; i < num_candidats; i++) {
+        printf("Candidat num %d, votes: %d\n", i, candidats[i].votes);
+    }
+
     int max_votes = 0;
-    int winner = 0;
+    int winners[num_candidats];
+    int num_winners = 0;
+
     for (int i = 0; i < num_candidats; i++) {
         if (candidats[i].votes > max_votes) {
             max_votes = candidats[i].votes;
-            winner = i;
+            winners[0] = i;
+            num_winners = 1;
+        } else if (candidats[i].votes == max_votes) {
+            winners[num_winners] = i;
+            num_winners++;
         }
     }
 
-    // Print the winner
-    printf("le gagnant est : %s\n", candidats[winner].nom);
+    if (num_winners == 1) {
+        printf("Le gagnant est : %s\n", candidats[winners[0]].nom);
+    } else {
+        printf("Il y a une egalite entre les candidats suivants :\n");
+        for (int i = 0; i < num_winners; i++) {
+            printf("%s\n", candidats[winners[i]].nom);
+        }
+    }
 
     return 0;
 }
