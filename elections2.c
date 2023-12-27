@@ -70,6 +70,7 @@ void enfiler(File* file, personne item) {
     file->taille = file->taille + 1;
 }
 
+//fonction pour verifier si un element existe dans la file
 int num_exist_File(File* file, long numero_de_carte) {
     int count = file->taille;
     int i = file->avant;
@@ -82,8 +83,7 @@ int num_exist_File(File* file, long numero_de_carte) {
     return -1;  
 }
 
-
-
+//fonction pour verifier si un element existe dans la Pile
 int num_exist_Pile(Pile* pile, long numero_de_carte) {
     for (int i = 0; i <= pile->sommet; i++) {
         if (pile->tableau[i].num == numero_de_carte) {
