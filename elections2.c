@@ -2,293 +2,284 @@
 #include <string.h>
 #include <stdlib.h>
 
-
 typedef enum {
-    administrateur,
-    electeur,
-    candidat 
-} fonction;
+    administrator,
+    voter,
+    candidate
+} role;
 
 typedef struct {
-    fonction role;
-    char nom[50];
-    char prenom[50];
-    long numero_de_carte;  
-    int deja_voter;
-} personne;
+    role role;
+    char firstName[50];
+    char lastName[50];
+    long idNumber;
+    int hasVoted;
+} person;
 
 typedef struct {
-    char nom[50];
-    char prenom[50];
-    int num;
+    char firstName[50];
+    char lastName[50];
+    int id;
     int votes;
-} candidature;
+} candidacy;
 
+// Definition of the Stack structure
+typedef struct Stack {
+    int top;
+    unsigned capacity;
+    candidacy* array;
+} Stack;
 
-// Définition de la structure de la Pile
-typedef struct Pile {
-    int sommet;
-    unsigned capacite;
-    candidature* tableau;
-} Pile;
-
-// Fonction pour créer une pile de capacité donnée
-Pile* creerPile(unsigned capacite) {
-    Pile* pile = (Pile*) malloc(sizeof(Pile));
-    pile->capacite = capacite;
-    pile->sommet = -1;
-    pile->tableau = (candidature*) malloc(pile->capacite * sizeof(candidature));
-    return pile;
+// Function to create a stack of given capacity
+Stack* createStack(unsigned capacity) {
+    Stack* stack = (Stack*) malloc(sizeof(Stack));
+    stack->capacity = capacity;
+    stack->top = -1;
+    stack->array = (candidacy*) malloc(stack->capacity * sizeof(candidacy));
+    return stack;
 }
 
-// Fonction pour ajouter un élément à la pile
-void empiler(Pile* pile, candidature item) {
-    pile->tableau[++pile->sommet] = item;
+// Function to add an element to the stack
+void push(Stack* stack, candidacy item) {
+    stack->array[++stack->top] = item;
 }
 
-// Définition de la structure de la File
-typedef struct File {
-    int avant, arriere, taille;
-    unsigned capacite;
-    personne* tableau;
-} File;
+// Definition of the Queue structure
+typedef struct Queue {
+    int front, rear, size;
+    unsigned capacity;
+    person* array;
+} Queue;
 
-// Fonction pour créer une file de capacité donnée
-File* creerFile(unsigned capacite) {
-    File* file = (File*) malloc(sizeof(File));
-    file->capacite = capacite;
-    file->avant = file->taille = 0; 
-    file->arriere = capacite - 1;
-    file->tableau = (personne*) malloc(file->capacite * sizeof(personne));
-    return file;
+// Function to create a queue of given capacity
+Queue* createQueue(unsigned capacity) {
+    Queue* queue = (Queue*) malloc(sizeof(Queue));
+    queue->capacity = capacity;
+    queue->front = queue->size = 0;
+    queue->rear = capacity - 1;
+    queue->array = (person*) malloc(queue->capacity * sizeof(person));
+    return queue;
 }
 
-// Fonction pour ajouter un élément à la file
-void enfiler(File* file, personne item) {
-    file->arriere = (file->arriere + 1)%file->capacite;
-    file->tableau[file->arriere] = item;
-    file->taille = file->taille + 1;
+// Function to add an element to the queue
+void enqueue(Queue* queue, person item) {
+    queue->rear = (queue->rear + 1) % queue->capacity;
+    queue->array[queue->rear] = item;
+    queue->size = queue->size + 1;
 }
 
-//fonction pour verifier si un element existe dans la file
-int num_exist_File(File* file, long numero_de_carte) {
-    int count = file->taille;
-    int i = file->avant;
+// Function to check if an element exists in the queue
+int idExistsInQueue(Queue* queue, long idNumber) {
+    int count = queue->size;
+    int i = queue->front;
     while (count--) {
-        if (file->tableau[i].numero_de_carte == numero_de_carte) {
-            return (i - file->avant + file->capacite) % file->capacite;  
+        if (queue->array[i].idNumber == idNumber) {
+            return (i - queue->front + queue->capacity) % queue->capacity;
         }
-        i = (i + 1) % file->capacite;
+        i = (i + 1) % queue->capacity;
     }
-    return -1;  
+    return -1;
 }
 
-//fonction pour verifier si un element existe dans la Pile
-int num_exist_Pile(Pile* pile, long numero_de_carte) {
-    for (int i = 0; i <= pile->sommet; i++) {
-        if (pile->tableau[i].num == numero_de_carte) {
-            return i;  
+// Function to check if an element exists in the stack
+int idExistsInStack(Stack* stack, long idNumber) {
+    for (int i = 0; i <= stack->top; i++) {
+        if (stack->array[i].id == idNumber) {
+            return i;
         }
     }
-    return -1;  
+    return -1;
 }
 
 int main() {
+    int numAdministrators, numVoters;
 
-    int num_administrateurs, num_electeurs;
+    printf("Enter the number of administrators: ");
+    scanf("%d", &numAdministrators);
+    printf("Enter the number of voters: ");
+    scanf("%d", &numVoters);
 
-    printf("Entrer le nombre des administrateurs: ");
-    scanf("%d", &num_administrateurs);
-    printf("Entrez le nombre des electeurs: ");
-    scanf("%d", &num_electeurs);
+    // Create the queue for people
+    Queue* people = createQueue(numAdministrators + numVoters);
 
-    // Création de la file pour les personnes
-    File* personnes = creerFile(num_administrateurs + num_electeurs);
-   
-    // Création de la pile pour les candidats
-    Pile* candidats = creerPile(num_electeurs);  
+    // Create the stack for candidates
+    Stack* candidates = createStack(numVoters);
 
-    int input_role;
-    char input_nom[50];
-    char input_prenom[50];
-    long input_numero_de_carte;  
-    int input_vote;
-    int num_candidats = 0;  
+    int inputRole;
+    char inputFirstName[50];
+    char inputLastName[50];
+    long inputIdNumber;
+    int inputVote;
+    int numCandidates = 0;
     int index;
 
-    printf("On va saisir les informations des administrateurs.\n");
-    for (int i=0; i<num_administrateurs; i++) {
-        personne p;
+    printf("We will enter the administrators' information.\n");
+    for (int i = 0; i < numAdministrators; i++) {
+        person p;
         do {
-            printf("Entrez le numero de carte: ");
-            scanf("%ld", &input_numero_de_carte);
+            printf("Enter ID number: ");
+            scanf("%ld", &inputIdNumber);
             while ((getchar()) != '\n');
-            index = num_exist_File(personnes, input_numero_de_carte);
+            index = idExistsInQueue(people, inputIdNumber);
             if (index != -1) {
-                printf("Ce num d identite existe deja. Veuillez verifier et entrer un num unique.\n");
+                printf("This ID already exists. Please verify and enter a unique ID.\n");
             }
-        } while (num_exist_File(personnes, input_numero_de_carte) != -1);
-        
-        p.numero_de_carte=input_numero_de_carte;
-        
-        printf("Entrez nom: ");
-        scanf("%s", p.nom);
+        } while (idExistsInQueue(people, inputIdNumber) != -1);
+
+        p.idNumber = inputIdNumber;
+
+        printf("Enter first name: ");
+        scanf("%s", p.firstName);
         while ((getchar()) != '\n');
-        
-        printf("Entrez prenom: ");
-        scanf("%s", p.prenom);
-        
-        p.role = administrateur;
-        p.deja_voter = 0;
-        
-        enfiler(personnes, p);
-        
+
+        printf("Enter last name: ");
+        scanf("%s", p.lastName);
+
+        p.role = administrator;
+        p.hasVoted = 0;
+
+        enqueue(people, p);
     }
 
-    printf("On va saisir les informations des etudiants.\n");
-    for (int i=0; i<num_electeurs; i++) {
-        personne p;
-        candidature c;
-        
+    printf("We will enter the students' information.\n");
+    for (int i = 0; i < numVoters; i++) {
+        person p;
+        candidacy c;
+
         do {
-            printf("Entrez le numero de carte: ");
-            scanf("%ld", &input_numero_de_carte);  
+            printf("Enter ID number: ");
+            scanf("%ld", &inputIdNumber);
             while ((getchar()) != '\n');
-            
-            int index = num_exist_File(personnes, input_numero_de_carte);
+
+            int index = idExistsInQueue(people, inputIdNumber);
             if (index != -1) {
-                if (personnes->tableau[index].role == administrateur) {
-                    printf("Ce num d identite appartient deja a un administrateur. Nous saisissons actuellement uniquement les informations des étudiants. Veuillez entrer un nouveau numéro.\n");
+                if (people->array[index].role == administrator) {
+                    printf("This ID already belongs to an administrator. We are currently only entering student information. Please enter a new ID.\n");
                 } else {
-                    printf("Ce numero d identite appartient deja a un etudiant. Veuillez verifier et entrer un num unique.\n");
+                    printf("This ID already belongs to a student. Please verify and enter a unique ID.\n");
                 }
             }
-        } while (num_exist_File(personnes, input_numero_de_carte) != -1);
+        } while (idExistsInQueue(people, inputIdNumber) != -1);
 
-        p.numero_de_carte=input_numero_de_carte;
-        
-        printf("Veuillez saisir votre nom : ");
-        scanf("%s", p.nom);
-        while ((getchar()) != '\n');
-        
-        printf("Veuillez saisir votre prenom : ");
-        scanf("%s", p.prenom);
-        while ((getchar()) != '\n');
-        
-        printf("Voulez-vous postuler votre candidature ? (0 pour non, 1 pour oui) : ");
-        scanf("%d", &input_role);
-        
-        if (input_role == 1) {
-            // Si l'étudiant est un candidat, ajoutez-le à la pile 'candidats'
-            c.num = candidats->sommet + 1;
-            strcpy(c.nom, p.nom);
-            strcpy(c.prenom, p.prenom);
-            c.votes = 0;  // Initialisez les votes à 0
-            empiler(candidats, c);  // Ajoutez le candidat à la pile
+        p.idNumber = inputIdNumber;
 
-            FILE *fichier1 = fopen("candidats.txt", "w");
-            fprintf(fichier1, "%d %s %s %d\n", c.num, c.nom, c.prenom, c.votes);
-            fclose(fichier1);
+        printf("Please enter your first name: ");
+        scanf("%s", p.firstName);
+        while ((getchar()) != '\n');
+
+        printf("Please enter your last name: ");
+        scanf("%s", p.lastName);
+        while ((getchar()) != '\n');
+
+        printf("Do you want to run for candidacy? (0 for no, 1 for yes): ");
+        scanf("%d", &inputRole);
+
+        if (inputRole == 1) {
+            // If the student is a candidate, add them to the 'candidates' stack
+            c.id = candidates->top + 1;
+            strcpy(c.firstName, p.firstName);
+            strcpy(c.lastName, p.lastName);
+            c.votes = 0;  // Initialize votes to 0
+            push(candidates, c);  // Add the candidate to the stack
+
+            FILE *file1 = fopen("candidates.txt", "w");
+            fprintf(file1, "%d %s %s %d\n", c.id, c.firstName, c.lastName, c.votes);
+            fclose(file1);
         }
-        
-        p.role = input_role == 1 ? candidat : electeur;
-        p.deja_voter = 0;
-        enfiler(personnes, p);  // Ajoutez la personne à la file
 
-        FILE *fichier2 = fopen("electeurs.txt", "r");
-        fscanf(fichier2, "%ld %s %s %d\n", &p.numero_de_carte, p.nom, p.prenom, &p.role);
-        fclose(fichier2);
+        p.role = inputRole == 1 ? candidate : voter;
+        p.hasVoted = 0;
+        enqueue(people, p);  // Add the person to the queue
+
+        FILE *file2 = fopen("voters.txt", "r");
+        fscanf(file2, "%ld %s %s %d\n", &p.idNumber, p.firstName, p.lastName, &p.role);
+        fclose(file2);
     }
-    
-    
-    // Implementer le processus du vote 
-    int i=0;
-    while (i < num_electeurs) {
-        personne p;
-        
-        printf("Entrez le num de carte: ");
-        scanf("%ld", &input_numero_de_carte);
+
+    // Implement the voting process
+    int i = 0;
+    while (i < numVoters) {
+        person p;
+
+        printf("Enter ID number: ");
+        scanf("%ld", &inputIdNumber);
         while ((getchar()) != '\n');
-        
-        int index = num_exist_File(personnes, input_numero_de_carte);
+
+        int index = idExistsInQueue(people, inputIdNumber);
         if (index != -1) {
-            // The card number exists, so set the deja_voter flag to 1
-            personnes->tableau[index].deja_voter = 1;
-            
-            
+            // The ID number exists, so set the hasVoted flag to 1
+            people->array[index].hasVoted = 1;
+
             // Now check if they're allowed to vote
-            if (personnes->tableau[index].role != administrateur) {
-                for (int j = 0; j <= candidats->sommet; j++) {
-                    printf("%d. %s\n", j, candidats->tableau[j].nom);
+            if (people->array[index].role != administrator) {
+                for (int j = 0; j <= candidates->top; j++) {
+                    printf("%d. %s\n", j, candidates->array[j].firstName);
                 }
-            
+
                 do {
-                 printf("Entrez le num du candidat pour lequel vous voulez voter: ");
-                 scanf("%d", &input_vote);
-                 if (input_vote < 0 || input_vote > candidats->sommet) {
-                     printf("Ce num n'est pas disponible. Veuillez choisir un num valide.\n");
+                    printf("Enter the number of the candidate you want to vote for: ");
+                    scanf("%d", &inputVote);
+                    if (inputVote < 0 || inputVote > candidates->top) {
+                        printf("This number is not available. Please choose a valid number.\n");
                     }
-                } while (input_vote < 0 || input_vote > candidats->sommet);
-            
-             // Mettre à jour les votes du candidat choisi
-             candidats->tableau[input_vote].votes++;
-             i++;
+                } while (inputVote < 0 || inputVote > candidates->top);
+
+                // Update the votes for the chosen candidate
+                candidates->array[inputVote].votes++;
+                i++;
             } else {
-              printf("Vous etes un administrateur. Entrez 0 pour arreter les elections: ");
-              scanf("%d", &input_vote);
-              if (input_vote == 0) {
-                 printf("Les elections ont ete arretees par un administrateur.\n");
-                 exit(0);
+                printf("You are an administrator. Enter 0 to stop the elections: ");
+                scanf("%d", &inputVote);
+                if (inputVote == 0) {
+                    printf("The elections have been stopped by an administrator.\n");
+                    exit(0);
                 } else {
-                 printf("Le code n est pas valide. Les elections continuent.\n");
+                    printf("The code is not valid. The elections continue.\n");
                 }
             }
         } else {
-         printf("Votre carte d identite n est pas enregistree, veuillez verifier vos informations.\n");
+            printf("Your ID is not registered, please verify your information.\n");
         }
     }
 
-
-    
-    
-    for (int i = 0; i <= candidats->sommet; i++) {
-        printf("Candidat num %d, votes: %d\n", i, candidats->tableau[i].votes);
+    for (int i = 0; i <= candidates->top; i++) {
+        printf("Candidate number %d, votes: %d\n", i, candidates->array[i].votes);
     }
-    
-    int max_votes = 0;
-    int winners[candidats->sommet + 1];
-    int num_winners = 0;
-    
-    for (int i = 0; i <= candidats->sommet; i++) {
-        if (candidats->tableau[i].votes > max_votes) {
-            max_votes = candidats->tableau[i].votes;
+
+    int maxVotes = 0;
+    int winners[candidates->top + 1];
+    int numWinners = 0;
+
+    for (int i = 0; i <= candidates->top; i++) {
+        if (candidates->array[i].votes > maxVotes) {
+            maxVotes = candidates->array[i].votes;
             winners[0] = i;
-            num_winners = 1;
-        } else if (candidats->tableau[i].votes == max_votes) {
-                winners[num_winners] = i;
-                num_winners++;
+            numWinners = 1;
+        } else if (candidates->array[i].votes == maxVotes) {
+            winners[numWinners] = i;
+            numWinners++;
         }
     }
-    
-    
-    if (num_winners == 1) {
-        printf("Le gagnant est : %s\n", candidats->tableau[winners[0]].nom);
-        
-        FILE *fichier3 = fopen("resultats.txt", "w");
-        fprintf(fichier3, "Le gagnant de l'élection est %s %s avec %d votes.\n", candidats->tableau[winners[0]].nom, candidats->tableau[winners[0]].prenom, candidats->tableau[winners[0]].votes);
-        fclose(fichier3);
+
+    if (numWinners == 1) {
+        printf("The winner is: %s\n", candidates->array[winners[0]].firstName);
+
+        FILE *file3 = fopen("results.txt", "w");
+        fprintf(file3, "The winner of the election is %s %s with %d votes.\n", candidates->array[winners[0]].firstName, candidates->array[winners[0]].lastName, candidates->array[winners[0]].votes);
+        fclose(file3);
 
     } else {
-        printf("Il y a une egalite entre les candidats \n");
-        for (int i = 0; i < num_winners; i++) {
-            printf("%s\n", candidats->tableau[winners[i]].nom);
+        printf("There is a tie between the candidates\n");
+        for (int i = 0; i < numWinners; i++) {
+            printf("%s\n", candidates->array[winners[i]].firstName);
 
-            FILE *fichier3 = fopen("resultats.txt", "w");
-            fprintf(fichier3, "Le gagnant de l'élection est %s %s avec %d votes.\n", candidats->tableau[winners[i]].nom, candidats->tableau[winners[i]].prenom, candidats->tableau[winners[i]].votes);
-            fclose(fichier3);
+            FILE *file3 = fopen("results.txt", "w");
+            fprintf(file3, "The winner of the election is %s %s with %d votes.\n", candidates->array[winners[i]].firstName, candidates->array[winners[i]].lastName, candidates->array[winners[i]].votes);
+            fclose(file3);
         }
     }
 
     return 0;
 }
+
 
